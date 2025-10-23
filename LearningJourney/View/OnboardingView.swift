@@ -6,8 +6,7 @@
 //
 
 import SwiftUI
-import CoreImage
-import CoreImage.CIFilterBuiltins
+
 
 struct OnboardingView: View {
     
