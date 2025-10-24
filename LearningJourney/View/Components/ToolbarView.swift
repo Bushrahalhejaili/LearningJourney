@@ -4,7 +4,6 @@
 //
 //  Created by Bushra Hatim Alhejaili on 23/10/2025.
 //
-
 import SwiftUI
 
 struct ToolbarView: View {
@@ -21,9 +20,7 @@ struct ToolbarView: View {
 
             GlassEffectContainer(spacing: 40.0) {
 
-                Button {
-                    onCalendarTap()
-                } label: {
+                Button { onCalendarTap() } label: {
                     Image(systemName:"calendar")
                         .font(.system(size: 22, weight: .bold))
                         .frame(width: 44, height: 44)
@@ -31,9 +28,7 @@ struct ToolbarView: View {
                         .glassEffect()
                 }
 
-                Button {
-                    onPencilTap()
-                } label: {
+                Button { onPencilTap() } label: {
                     Image(systemName:"pencil.and.outline")
                         .font(.system(size: 22, weight: .bold))
                         .frame(width: 44, height: 44)
