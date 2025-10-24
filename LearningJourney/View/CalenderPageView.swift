@@ -87,15 +87,15 @@ private struct MonthSectionView: View {
 
             // Month header
             Text(headerTitle)
-                .font(.system(size: 16, weight: .semibold))
+                .font(.system(size: 17, weight: .semibold))
                 .foregroundStyle(.white)
                 .padding(.top, 4)
 
             // Weekday header row
-            HStack {
+            HStack(spacing: 19) {
                 ForEach(weekdayHeaders, id: \.self) { d in
                     Text(d)
-                        .font(.system(size: 12, weight: .semibold))
+                        .font(.system(size: 13, weight: .semibold))
                         .foregroundStyle(.gray)
                         .frame(maxWidth: .infinity, alignment: .center)
                 }
@@ -121,7 +121,7 @@ private struct MonthSectionView: View {
 
             // Clear gray divider between months
             Divider()
-                .background(Color.gray.opacity(0.7))
+                .background(Color.gray.opacity(0.9))
                 .padding(.top, 6)
         }
     }
