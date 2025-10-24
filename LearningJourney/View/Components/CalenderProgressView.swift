@@ -38,7 +38,7 @@ struct CalenderProgressView: View {
 
     var body: some View {
         GlassEffectContainer {
-            VStack(spacing: 16) {
+            VStack(spacing: 20) {
                 
                 // Month + year + week navigation
                 HStack {
@@ -188,11 +188,14 @@ struct CalenderProgressView: View {
                     }
                 }
             }
-            .padding()
+            
             .preferredColorScheme(.dark)
             .cornerRadius(13)
+            .padding()
             .glassEffect(.clear, in: .rect(cornerRadius: 13))
             .frame(width: 365, height: 254)
+            
+            
         }
     }
     // MARK: - Helpers
