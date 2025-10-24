@@ -8,8 +8,11 @@
 import SwiftUI
 
 struct CalenderProgressView: View {
+    // Show this in the "Learning progress" section
+    var learningTopic: String
+
     @State private var anchorDate: Date = Date()
-    
+
     // Picker state
     @State private var showingMonthYearPicker = false
     @State private var pickedMonth: Int = Calendar.current.component(.month, from: Date()) - 1 // 0...11
@@ -39,19 +42,19 @@ struct CalenderProgressView: View {
     var body: some View {
         GlassEffectContainer {
             VStack(spacing: 20) {
-                
+
                 // Month + year + week navigation
                 HStack {
                     Text(monthTitle)
                         .font(.system(size: 17, weight: .semibold))
-                    
+
                     // Popover button (chevron)
-                    Button(action: {
+                    Button {
                         let comps = Calendar.current.dateComponents([.year, .month], from: anchorDate)
                         pickedMonth = (comps.month ?? 1) - 1
                         pickedYear = comps.year ?? pickedYear
                         showingMonthYearPicker = true
-                    }) {
+                    } label: {
                         Image(systemName: showingMonthYearPicker ? "chevron.down" : "chevron.right")
                             .foregroundColor(.orange)
                             .bold()
@@ -68,7 +71,7 @@ struct CalenderProgressView: View {
                                 }
                                 .pickerStyle(.wheel)
                                 .frame(maxWidth: .infinity)
-                                
+
                                 // Year wheel
                                 let currentYear = Calendar.current.component(.year, from: Date())
                                 Picker("Year", selection: $pickedYear) {
@@ -80,22 +83,15 @@ struct CalenderProgressView: View {
                                 .frame(maxWidth: .infinity)
                             }
                             .labelsHidden()
-                            .onChange(of: pickedMonth) { _, _ in
-                                applyPickedMonthYear()
-                            }
-                            .onChange(of: pickedYear) { _, _ in
-                                applyPickedMonthYear()
-                            }
+                            .onChange(of: pickedMonth) { _, _ in applyPickedMonthYear() }
+                            .onChange(of: pickedYear)  { _, _ in applyPickedMonthYear() }
                         }
                         .presentationCompactAdaptation(.popover)
                         .padding()
-//                        .glassEffect(in: RoundedRectangle(cornerRadius: 13))
-                        
-                        
                     }
-                    
+
                     Spacer()
-                    
+
                     Button {
                         withAnimation(.easeInOut) { anchorDate = shiftWeek(by: -1) }
                     } label: {
@@ -103,7 +99,7 @@ struct CalenderProgressView: View {
                             .foregroundStyle(.orange).bold()
                     }
                     .padding(.trailing)
-                    
+
                     Button {
                         withAnimation(.easeInOut) { anchorDate = shiftWeek(by: 1) }
                     } label: {
@@ -111,7 +107,7 @@ struct CalenderProgressView: View {
                             .foregroundStyle(.orange).bold()
                     }
                 }
-                
+
                 // Day names + dates
                 VStack {
                     HStack(spacing: 17) {
@@ -135,15 +131,15 @@ struct CalenderProgressView: View {
                         }
                     }
                 }
-                
+
                 Divider()
-                
+
                 // Learning progress section
                 VStack(spacing: 12) {
-                    Text("Learning Swift")
+                    Text("Learning \(learningTopic)")
                         .font(.system(size: 16, weight: .semibold))
                         .frame(maxWidth: .infinity, alignment: .leading)
-                    
+
                     HStack(spacing: 12) {
                         // Days Learned
                         HStack {
@@ -165,7 +161,7 @@ struct CalenderProgressView: View {
                         .background(Color(.brownie))
                         .cornerRadius(50)
                         .glassEffect(.clear.tint(.darkishBlue))
-                        
+
                         // Days Frozen
                         HStack {
                             Image(systemName: "cube.fill")
@@ -177,7 +173,7 @@ struct CalenderProgressView: View {
                                 Text("1")
                                     .foregroundColor(.white)
                                     .font(.system(size: 24, weight: .semibold))
-                                Text("Days Freezed")
+                                Text("Day Freezed")
                                     .foregroundColor(.white)
                                     .font(.system(size: 12, weight: .regular))
                             }
@@ -188,16 +184,14 @@ struct CalenderProgressView: View {
                     }
                 }
             }
-            
             .preferredColorScheme(.dark)
             .cornerRadius(13)
             .padding()
             .glassEffect(.clear, in: .rect(cornerRadius: 13))
             .frame(width: 365, height: 254)
-            
-            
         }
     }
+
     // MARK: - Helpers
     private func shiftWeek(by offset: Int) -> Date {
         Calendar(identifier: .gregorian)
@@ -210,9 +204,9 @@ struct CalenderProgressView: View {
 
     private func applyPickedMonthYear() {
         var comps = DateComponents()
-        comps.year = pickedYear
+        comps.year  = pickedYear
         comps.month = pickedMonth + 1
-        comps.day = 1
+        comps.day   = 1
         if let composed = Calendar.current.date(from: comps) {
             anchorDate = composed
         }
@@ -220,5 +214,5 @@ struct CalenderProgressView: View {
 }
 
 #Preview {
-    CalenderProgressView()
+    CalenderProgressView(learningTopic: "Swift")
 }

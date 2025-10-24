@@ -36,14 +36,31 @@ struct CalenderPageView: View {
     }
 
     var body: some View {
-        ScrollView {
-            LazyVStack(spacing: 24) {
-                ForEach(months, id: \.self) { month in
-                    MonthSectionView(month: month)
-                        .padding(.horizontal, 16)
+        ScrollViewReader { proxy in
+            ScrollView {
+                LazyVStack(spacing: 24) {
+                    ForEach(months, id: \.self) { month in
+                        MonthSectionView(month: month)
+                            .padding(.horizontal, 16)
+                            .id(month)
+                    }
+                }
+                .padding(.vertical, 12)
+            }
+            .onAppear {
+                if let target = months.first(where: {
+                    calendar.isDate($0, equalTo: Date(), toGranularity: .month)
+                }) {
+                    // Jump instantly (no animation) so there's no fast scrolling effect.
+                    DispatchQueue.main.async {
+                        var t = Transaction()
+                        t.disablesAnimations = true
+                        withTransaction(t) {
+                            proxy.scrollTo(target, anchor: .top)
+                        }
+                    }
                 }
             }
-            .padding(.vertical, 12)
         }
         .navigationTitle("All activities")
         .navigationBarTitleDisplayMode(.inline)
@@ -85,13 +102,11 @@ private struct MonthSectionView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
 
-            // Month header
             Text(headerTitle)
                 .font(.system(size: 17, weight: .semibold))
                 .foregroundStyle(.white)
                 .padding(.top, 4)
 
-            // Weekday header row
             HStack(spacing: 19) {
                 ForEach(weekdayHeaders, id: \.self) { d in
                     Text(d)
@@ -101,7 +116,6 @@ private struct MonthSectionView: View {
                 }
             }
 
-            // Grid of days (white numbers only)
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 0), count: 7), spacing: 10) {
                 ForEach(Array(dayCells.enumerated()), id: \.offset) { _, cell in
                     ZStack {
@@ -119,7 +133,6 @@ private struct MonthSectionView: View {
                 }
             }
 
-            // Clear gray divider between months
             Divider()
                 .background(Color.gray.opacity(0.9))
                 .padding(.top, 6)
@@ -128,5 +141,7 @@ private struct MonthSectionView: View {
 }
 
 #Preview {
-    CalenderPageView()
+    NavigationStack {
+        CalenderPageView()
+    }
 }
