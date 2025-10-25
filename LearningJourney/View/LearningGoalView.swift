@@ -7,16 +7,28 @@
 import SwiftUI
 
 struct LearningGoalView: View {
-
+    var progress: LearningProgress
+    
     @State private var learningTopic: String = ""
     enum goalDuration { case Week , Month , Year }
     @State private var goal: goalDuration?
+    
+    @Environment(\.dismiss) var dismiss
 
     // Text styling
     var textFieldFont: Font = .title3
     var textFieldTextColor: Color = Color(.white)
     var placeholderText: String = "Swift"
     var placeholderColor: Color = Color(.gray)
+    
+    private var durationLabel: String {
+        switch goal {
+        case .Week:  return "Week"
+        case .Month: return "Month"
+        case .Year:  return "Year"
+        case .none:  return ""
+        }
+    }
 
     var body: some View {
         VStack(spacing: 24) {
@@ -73,13 +85,39 @@ struct LearningGoalView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .padding(.horizontal, 20)
         .padding(.top, 24)
-        .navigationTitle("Learning Goal")               // ← header
+        .navigationTitle("Learning Goal")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                if !learningTopic.isEmpty && goal != nil {
+                    Button {
+                        // Update progress with new goal
+                        progress.learningTopic = learningTopic.trimmingCharacters(in: .whitespacesAndNewlines)
+                        progress.goalDuration = durationLabel
+                        progress.resetStreak()
+                        progress.goalStartDate = Calendar.current.startOfDay(for: progress.simulatedDate ?? Date())
+                        dismiss()
+                    } label: {
+                        Image(systemName: "checkmark")
+                            .foregroundColor(.white)
+                        
+                            .glassEffect(.regular.tint(.lightOrange.opacity(0.4)))
+
+                    }
+                }
+            }
+        }
     }
 }
 
 #Preview {
     NavigationStack {
-        LearningGoalView()
+        LearningGoalView(progress: LearningProgress())
     }
 }
+
+
+//Image(systemName: "checkmark")
+//    .foregroundColor(.white)
+//    
+//    .glassEffect(.regular.tint(.lightOrange.opacity(0.4)))

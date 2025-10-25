@@ -8,22 +8,13 @@
 import SwiftUI
 
 struct ActivityView: View {
-    // receive values from Onboarding
-    var learningTopic: String
-    var goalDuration: String   // kept for future use (e.g., summary text)
-
-    @State private var goToCalendar: Bool = false
-    @State private var goToLearningGoal: Bool = false
-    
     // Create shared progress tracker
     @State private var progress: LearningProgress
     
     init(learningTopic: String, goalDuration: String) {
-        self.learningTopic = learningTopic
-        self.goalDuration = goalDuration
-        
-        // Initialize progress with goal duration
+        // Initialize progress with goal info
         let initialProgress = LearningProgress()
+        initialProgress.learningTopic = learningTopic
         initialProgress.goalDuration = goalDuration
         _progress = State(initialValue: initialProgress)
     }
@@ -46,20 +37,28 @@ struct ActivityView: View {
             Spacer()
 
             VStack(spacing: 44) {
-                CalenderProgressView(learningTopic: learningTopic, progress: progress)
-                LogActionButton(progress: progress)
+                CalenderProgressView(learningTopic: progress.learningTopic, progress: progress)
+                
+                // Show goal completed view or log buttons
+                if progress.isGoalCompleted {
+                    GoalCompletedView()
+                } else {
+                    LogActionButton(progress: progress)
+                }
             }
 
             Spacer()
-            FreezeButton(progress: progress)
-                .frame(width: 274, height: 48)
+            
+            // Show new goal button or freeze button
+            if progress.isGoalCompleted {
+                NewGoalButton(progress: progress)
+            } else {
+                FreezeButton(progress: progress)
+                    .frame(width: 274, height: 48)
+            }
         }
         .preferredColorScheme(.dark)
         .navigationBarBackButtonHidden(true)
-        .onAppear {
-            // Check for streak reset when view appears
-            progress.checkAndResetStreak()
-        }
 
         // Present calendar
         .navigationDestination(isPresented: $goToCalendar) {
@@ -67,17 +66,16 @@ struct ActivityView: View {
         }
         // Present learning goal editor
         .navigationDestination(isPresented: $goToLearningGoal) {
-            LearningGoalView()
+            LearningGoalView(progress: progress)
                 .navigationTitle("Learning Goal")
                 .navigationBarTitleDisplayMode(.inline)
-                .onDisappear {
-                    // Reset streak when returning from learning goal update
-                    // You can add a flag to check if goal was actually updated
-                    // For now, this will reset on any return from LearningGoalView
-                }
         }
     }
+    
+    @State private var goToCalendar: Bool = false
+    @State private var goToLearningGoal: Bool = false
 }
+
 
 #Preview {
     NavigationStack {

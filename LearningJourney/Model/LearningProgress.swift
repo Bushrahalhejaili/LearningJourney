@@ -4,7 +4,6 @@
 //
 //  Created by Bushra Hatim Alhejaili on 03/05/1447 AH.
 //
-
 import SwiftUI
 
 @Observable
@@ -14,14 +13,32 @@ class LearningProgress {
     var currentStreakCount: Int = 0
     var frozenDaysCount: Int = 0
     
-    // Freeze limits based on goal duration
+    // Goal information
+    var learningTopic: String = ""
     var goalDuration: String = "Week"  // Week, Month, or Year
+    var goalStartDate: Date = Date()  // Track when goal started
+    
     var maxFreezes: Int {
         switch goalDuration {
         case "Week": return 2
         case "Month": return 8
         case "Year": return 96
         default: return 2
+        }
+    }
+    
+    // Check if goal is completed
+    var isGoalCompleted: Bool {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: getCurrentDate())
+        let startOfGoal = calendar.startOfDay(for: goalStartDate)
+        let daysSinceStart = calendar.dateComponents([.day], from: startOfGoal, to: today).day ?? 0
+        
+        switch goalDuration {
+        case "Week": return daysSinceStart >= 7
+        case "Month": return daysSinceStart >= 30
+        case "Year": return daysSinceStart >= 365
+        default: return false
         }
     }
     
@@ -148,16 +165,37 @@ class LearningProgress {
         }
     }
     
-    // Reset the streak
+    // Reset the streak (used for completely new goals - but keep calendar history)
     func resetStreak() {
+        // Don't clear loggedDates and freezedDates - keep them for calendar history
+        // Only reset the counters
+        currentStreakCount = 0
+        frozenDaysCount = 0
+    }
+    
+    // Complete reset - clears everything including calendar (not used anymore)
+    func resetStreakAndHistory() {
         loggedDates.removeAll()
         freezedDates.removeAll()
         currentStreakCount = 0
         frozenDaysCount = 0
     }
     
+    // Reset goal while keeping calendar history
+    func resetGoalKeepHistory() {
+        // Start a new goal cycle - reset counters and start date
+        // but keep ALL historical data visible in calendar
+        goalStartDate = calendar.startOfDay(for: getCurrentDate())
+        currentStreakCount = 0
+        frozenDaysCount = 0
+        
+        // Don't touch loggedDates or freezedDates - they stay for calendar history
+        // This allows starting fresh while preserving the visual history
+    }
+    
     // Reset when learning goal is updated
     func resetForGoalUpdate() {
+        // Keep calendar history, just reset counters
         resetStreak()
     }
     

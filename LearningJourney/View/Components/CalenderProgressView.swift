@@ -4,7 +4,6 @@
 //
 //  Created by Bushra Hatim Alhejaili on 23/10/2025.
 //
-
 import SwiftUI
 
 struct CalenderProgressView: View {
@@ -33,6 +32,17 @@ struct CalenderProgressView: View {
         let weekday = cal.component(.weekday, from: anchorDate)
         let startOfWeek = cal.date(byAdding: .day, value: -(weekday - 1), to: cal.startOfDay(for: anchorDate))!
         return (0..<7).compactMap { cal.date(byAdding: .day, value: $0, to: startOfWeek) }
+    }
+    
+    // Check if current date (real or simulated) is in current displayed week
+    private var shouldAutoAdvance: Bool {
+        let cal = Calendar.current
+        let currentDate = cal.startOfDay(for: progress.simulatedDate ?? Date())
+        let weekStart = weekDates.first!
+        let weekEnd = weekDates.last!
+        
+        // Check if current date is beyond the current week
+        return currentDate > weekEnd
     }
 
     var flameSize: CGFloat = 44
@@ -194,9 +204,25 @@ struct CalenderProgressView: View {
             .glassEffect(.clear, in: .rect(cornerRadius: 13))
             .frame(width: 365, height: 254)
         }
+        .onChange(of: progress.currentStreakCount) { _, _ in
+            checkAndAdvanceWeek()
+        }
+        .onChange(of: progress.frozenDaysCount) { _, _ in
+            checkAndAdvanceWeek()
+        }
     }
 
     // MARK: - Helpers
+    private func checkAndAdvanceWeek() {
+        // Auto-advance to next week if current date moved beyond displayed week
+        if shouldAutoAdvance {
+            let cal = Calendar.current
+            let currentDate = cal.startOfDay(for: progress.simulatedDate ?? Date())
+            withAnimation(.easeInOut) {
+                anchorDate = currentDate
+            }
+        }
+    }
     private func shiftWeek(by offset: Int) -> Date {
         Calendar(identifier: .gregorian)
             .date(byAdding: .day, value: offset * 7, to: anchorDate)!
