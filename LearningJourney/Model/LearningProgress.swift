@@ -131,13 +131,15 @@ class LearningProgress {
         return nil  // Not logged or frozen
     }
     
-    // Update streak count based on logged dates
+    // Update streak count based on logged dates (only from current goal start)
     private func updateStreakCount() {
         var streak = 0
         var currentDate = calendar.startOfDay(for: getCurrentDate())
+        let goalStart = calendar.startOfDay(for: goalStartDate)
         
         // Count backwards from today, including both logged and frozen days
-        while isDateLogged(currentDate) || isDateFreezed(currentDate) {
+        // But stop at goal start date
+        while (isDateLogged(currentDate) || isDateFreezed(currentDate)) && currentDate >= goalStart {
             // Only count logged days in the streak (not frozen days)
             if isDateLogged(currentDate) {
                 streak += 1
@@ -149,9 +151,15 @@ class LearningProgress {
         currentStreakCount = streak
     }
     
-    // Update freeze count based on frozen dates
+    // Update freeze count based on frozen dates (only from current goal start)
     private func updateFreezeCount() {
-        frozenDaysCount = freezedDates.count
+        let goalStart = calendar.startOfDay(for: goalStartDate)
+        
+        // Only count freezes that occurred after goal start date
+        frozenDaysCount = freezedDates.filter { date in
+            let normalized = calendar.startOfDay(for: date)
+            return normalized >= goalStart
+        }.count
     }
     
     // Check if streak should be reset (more than 32 hours since last log)
@@ -165,7 +173,7 @@ class LearningProgress {
         }
     }
     
-    // Reset the streak (used for completely new goals - but keep calendar history)
+    // Reset the streak (used for repeating same goal - keeps calendar history)
     func resetStreak() {
         // Don't clear loggedDates and freezedDates - keep them for calendar history
         // Only reset the counters
@@ -173,7 +181,15 @@ class LearningProgress {
         frozenDaysCount = 0
     }
     
-    // Complete reset - clears everything including calendar (not used anymore)
+    // Reset for completely new goal midway - KEEPS calendar history, resets counters
+    func resetForNewGoal() {
+        // Don't clear loggedDates and freezedDates - preserve ALL history for calendar
+        // Only reset the counters so streak starts fresh
+        currentStreakCount = 0
+        frozenDaysCount = 0
+    }
+    
+    // Complete reset - clears everything including calendar (only if user wants to delete all data)
     func resetStreakAndHistory() {
         loggedDates.removeAll()
         freezedDates.removeAll()

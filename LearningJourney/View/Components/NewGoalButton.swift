@@ -4,7 +4,6 @@
 //
 //  Created by Bushra Hatim Alhejaili on 03/05/1447 AH.
 //
-
 import SwiftUI
 
 struct NewGoalButton: View {
@@ -32,7 +31,7 @@ struct NewGoalButton: View {
                     .padding()
             }
             .navigationDestination(isPresented: $goToLearningGoal) {
-                LearningGoalView(progress: progress)
+                LearningGoalView(progress: progress, isUpdatingMidway: false)
                     .navigationTitle("Learning Goal")
                     .navigationBarTitleDisplayMode(.inline)
             }

@@ -38,7 +38,7 @@ struct CalenderProgressView: View {
     private var shouldAutoAdvance: Bool {
         let cal = Calendar.current
         let currentDate = cal.startOfDay(for: progress.simulatedDate ?? Date())
-        let weekStart = weekDates.first!
+        _ = weekDates.first!
         let weekEnd = weekDates.last!
         
         // Check if current date is beyond the current week

@@ -4,7 +4,6 @@
 //
 //  Created by Bushra Hatim Alhejaili on 21/10/2025.
 //
-
 import SwiftUI
 
 struct ActivityView: View {
@@ -66,7 +65,7 @@ struct ActivityView: View {
         }
         // Present learning goal editor
         .navigationDestination(isPresented: $goToLearningGoal) {
-            LearningGoalView(progress: progress)
+            LearningGoalView(progress: progress, isUpdatingMidway: !progress.isGoalCompleted)
                 .navigationTitle("Learning Goal")
                 .navigationBarTitleDisplayMode(.inline)
         }

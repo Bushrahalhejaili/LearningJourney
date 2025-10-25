@@ -8,10 +8,13 @@ import SwiftUI
 
 struct LearningGoalView: View {
     var progress: LearningProgress
+    var isUpdatingMidway: Bool = false  // true when updating during active goal
     
     @State private var learningTopic: String = ""
     enum goalDuration { case Week , Month , Year }
     @State private var goal: goalDuration?
+    
+    @State private var showWarning: Bool = false
     
     @Environment(\.dismiss) var dismiss
 
@@ -91,22 +94,45 @@ struct LearningGoalView: View {
             ToolbarItem(placement: .navigationBarTrailing) {
                 if !learningTopic.isEmpty && goal != nil {
                     Button {
-                        // Update progress with new goal
-                        progress.learningTopic = learningTopic.trimmingCharacters(in: .whitespacesAndNewlines)
-                        progress.goalDuration = durationLabel
-                        progress.resetStreak()
-                        progress.goalStartDate = Calendar.current.startOfDay(for: progress.simulatedDate ?? Date())
-                        dismiss()
+                        // Show warning if updating midway, otherwise update directly
+                        if isUpdatingMidway {
+                            showWarning = true
+                        } else {
+                            updateGoal()
+                        }
                     } label: {
                         Image(systemName: "checkmark")
                             .foregroundColor(.white)
                         
                             .glassEffect(.regular.tint(.lightOrange.opacity(0.4)))
-
                     }
                 }
             }
         }
+        .alert("Update Learning goal", isPresented: $showWarning) {
+            Button("Dismiss", role: .cancel) { }
+            Button("Update", role: .none) {
+                updateGoal()
+            }
+        } message: {
+            Text("If you update now, your streak will start over.")
+        }
+    }
+    
+    // MARK: - Helper Methods
+    private func updateGoal() {
+        progress.learningTopic = learningTopic.trimmingCharacters(in: .whitespacesAndNewlines)
+        progress.goalDuration = durationLabel
+        
+        // If updating midway, clear everything. Otherwise keep calendar history
+        if isUpdatingMidway {
+            progress.resetForNewGoal()  // Clear all dates and counters
+        } else {
+            progress.resetStreak()  // Keep calendar history, reset counters only
+        }
+        
+        progress.goalStartDate = Calendar.current.startOfDay(for: progress.simulatedDate ?? Date())
+        dismiss()
     }
 }
 

@@ -19,7 +19,7 @@ struct DateSimulatorView: View {
                 .foregroundColor(.yellow)
             
             Text(displayDate, style: .date)
-                .font(.subheadline)
+                .font(.headline)
                 .foregroundColor(.white)
             
             HStack(spacing: 16) {
@@ -29,9 +29,6 @@ struct DateSimulatorView: View {
                 } label: {
                     Image(systemName: "chevron.left")
                         .foregroundColor(.white)
-                        .padding(8)
-                        .background(Color.blue.opacity(0.3))
-                        .cornerRadius(8)
                 }
                 
                 Button("Today") {
@@ -39,10 +36,6 @@ struct DateSimulatorView: View {
                     updateDisplayDate()
                 }
                 .foregroundColor(.white)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .background(Color.green.opacity(0.3))
-                .cornerRadius(8)
                 
                 Button {
                     progress.advanceToNextDay()
@@ -50,15 +43,9 @@ struct DateSimulatorView: View {
                 } label: {
                     Image(systemName: "chevron.right")
                         .foregroundColor(.white)
-                        .padding(8)
-                        .background(Color.blue.opacity(0.3))
-                        .cornerRadius(8)
                 }
             }
         }
-        .padding()
-        .background(Color.gray.opacity(0.2))
-        .cornerRadius(12)
         .onAppear {
             updateDisplayDate()
         }
