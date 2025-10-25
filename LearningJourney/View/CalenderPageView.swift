@@ -8,17 +8,19 @@
 import SwiftUI
 
 struct CalenderPageView: View {
+    var progress: LearningProgress
 
     // Generate a large continuous range of months (100 years backward & forward)
     private let calendar = Calendar(identifier: .gregorian)
     private let months: [Date]
 
-    init(
-        from start: Date = Calendar(identifier: .gregorian)
+    init(progress: LearningProgress,
+         from start: Date = Calendar(identifier: .gregorian)
             .date(byAdding: .year, value: -100, to: Date())!,   // 100 years back
-        to end: Date = Calendar(identifier: .gregorian)
+         to end: Date = Calendar(identifier: .gregorian)
             .date(byAdding: .year, value: 100, to: Date())!     // 100 years forward
     ) {
+        self.progress = progress
         self.months = CalenderPageView.buildMonths(from: start, to: end)
     }
 
@@ -40,7 +42,7 @@ struct CalenderPageView: View {
             ScrollView {
                 LazyVStack(spacing: 24) {
                     ForEach(months, id: \.self) { month in
-                        MonthSectionView(month: month)
+                        MonthSectionView(month: month, progress: progress)
                             .padding(.horizontal, 16)
                             .id(month)
                     }
@@ -71,6 +73,8 @@ struct CalenderPageView: View {
 
 private struct MonthSectionView: View {
     let month: Date
+    var progress: LearningProgress
+    
     private let cal = Calendar(identifier: .gregorian)
 
     private var headerTitle: String {
@@ -82,19 +86,32 @@ private struct MonthSectionView: View {
 
     private let weekdayHeaders = ["SUN","MON","TUE","WED","THU","FRI","SAT"]
 
-    private var dayCells: [Int?] {
+    private var dayCells: [(day: Int?, date: Date?)] {
         let firstOfMonth = cal.date(from: cal.dateComponents([.year, .month], from: month))!
         let daysInMonth = cal.range(of: .day, in: .month, for: firstOfMonth)!.count
         let weekdayIndex = cal.component(.weekday, from: firstOfMonth) // 1 = Sun ... 7 = Sat
         let leadingBlanks = weekdayIndex - 1
 
-        var cells: [Int?] = Array(repeating: nil, count: leadingBlanks)
-        cells.append(contentsOf: (1...daysInMonth).map { Optional($0) })
+        var cells: [(day: Int?, date: Date?)] = []
+        
+        // Add leading blank cells
+        for _ in 0..<leadingBlanks {
+            cells.append((day: nil, date: nil))
+        }
+        
+        // Add actual day cells
+        for day in 1...daysInMonth {
+            if let date = cal.date(bySetting: .day, value: day, of: firstOfMonth) {
+                cells.append((day: day, date: date))
+            }
+        }
 
         // pad to complete last week row so grid stays even
         let remainder = cells.count % 7
         if remainder != 0 {
-            cells.append(contentsOf: Array(repeating: nil, count: 7 - remainder))
+            for _ in 0..<(7 - remainder) {
+                cells.append((day: nil, date: nil))
+            }
         }
         return cells
     }
@@ -119,11 +136,23 @@ private struct MonthSectionView: View {
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 0), count: 7), spacing: 10) {
                 ForEach(Array(dayCells.enumerated()), id: \.offset) { _, cell in
                     ZStack {
-                        if let day = cell {
-                            Text("\(day)")
-                                .font(.system(size: 16, weight: .semibold))
-                                .foregroundStyle(.white)
-                                .frame(maxWidth: .infinity, minHeight: 32)
+                        if let day = cell.day, let date = cell.date {
+                            // Show circle with color if date has progress
+                            if let color = progress.colorForDate(date) {
+                                Circle()
+                                    .fill(color)
+                                    .frame(width: 32, height: 32)
+                                
+                                Text("\(day)")
+                                    .font(.system(size: 16, weight: .semibold))
+                                    .foregroundStyle(.white)
+                            } else {
+                                // No progress on this date
+                                Text("\(day)")
+                                    .font(.system(size: 16, weight: .semibold))
+                                    .foregroundStyle(.white)
+                                    .frame(maxWidth: .infinity, minHeight: 32)
+                            }
                         } else {
                             Text(" ")
                                 .frame(maxWidth: .infinity, minHeight: 32)
@@ -142,6 +171,6 @@ private struct MonthSectionView: View {
 
 #Preview {
     NavigationStack {
-        CalenderPageView()
+        CalenderPageView(progress: LearningProgress())
     }
 }

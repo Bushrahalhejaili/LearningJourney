@@ -10,6 +10,7 @@ import SwiftUI
 struct CalenderProgressView: View {
     // Show this in the "Learning progress" section
     var learningTopic: String
+    var progress: LearningProgress
 
     @State private var anchorDate: Date = Date()
 
@@ -121,7 +122,10 @@ struct CalenderProgressView: View {
                     HStack {
                         ForEach(weekDates, id: \.self) { date in
                             ZStack {
-                                Circle().fill(Color("IdleCircle"))
+                                // Base circle - show logged color or idle
+                                Circle()
+                                    .fill(progress.colorForDate(date) ?? Color("IdleCircle"))
+                                
                                 Text(dayNumber(from: date))
                                     .font(.system(size: 20, weight: .semibold))
                                     .foregroundStyle(.white)
@@ -149,10 +153,10 @@ struct CalenderProgressView: View {
                                 .frame(width: flameSize, height: flameSize)
                                 .foregroundStyle(flameColor)
                             VStack(alignment:.leading) {
-                                Text("3")
+                                Text("\(progress.currentStreakCount)")
                                     .foregroundColor(.white)
                                     .font(.system(size: 24, weight: .semibold))
-                                Text("Days Learned")
+                                Text(progress.currentStreakCount == 1 ? "Day Learned" : "Days Learned")
                                     .foregroundColor(.white)
                                     .font(.system(size: 12, weight: .regular))
                             }
@@ -170,10 +174,10 @@ struct CalenderProgressView: View {
                                 .frame(width: cubeSize, height: cubeSize)
                                 .foregroundStyle(cubeColor)
                             VStack(alignment:.leading) {
-                                Text("1")
+                                Text("\(progress.frozenDaysCount)")
                                     .foregroundColor(.white)
                                     .font(.system(size: 24, weight: .semibold))
-                                Text("Day Freezed")
+                                Text(progress.frozenDaysCount == 1 ? "Day Freezed" : "Days Freezed")
                                     .foregroundColor(.white)
                                     .font(.system(size: 12, weight: .regular))
                             }
@@ -214,5 +218,5 @@ struct CalenderProgressView: View {
 }
 
 #Preview {
-    CalenderProgressView(learningTopic: "Swift")
+    CalenderProgressView(learningTopic: "Swift", progress: LearningProgress())
 }

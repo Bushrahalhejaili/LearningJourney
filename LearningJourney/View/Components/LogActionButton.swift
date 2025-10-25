@@ -8,17 +8,62 @@
 import SwiftUI
 
 struct LogActionButton: View {
+    var progress: LearningProgress
+    
+    // Customizable colors
+    var defaultBackgroundColor: Color = .richOrange
+    var learnedBackgroundColor: Color = .darkishBrown
+    var freezedBackgroundColor: Color = .darkishBlue
+    var defaultTextColor: Color = .white
+    var learnedTextColor: Color = .lightOrange
+    var freezedTextColor: Color = .lightBlue
+    
+    // Customizable text
+    var defaultText: String = "Log as Learned"
+    var learnedText: String = "Learned Today"
+    var freezedText: String = "Day Freezed"
+    
+    private var buttonText: String {
+        if progress.isTodayFreezed() {
+            return freezedText
+        } else if progress.isTodayLogged() {
+            return learnedText
+        } else {
+            return defaultText
+        }
+    }
+    
+    private var buttonTextColor: Color {
+        if progress.isTodayFreezed() {
+            return freezedTextColor
+        } else if progress.isTodayLogged() {
+            return learnedTextColor
+        } else {
+            return defaultTextColor
+        }
+    }
+    
+    private var buttonBackgroundColor: Color {
+        if progress.isTodayFreezed() {
+            return freezedBackgroundColor
+        } else if progress.isTodayLogged() {
+            return learnedBackgroundColor
+        } else {
+            return defaultBackgroundColor
+        }
+    }
+    
     var body: some View {
-        Button("Log as Learned") {
-            /*@START_MENU_TOKEN@*//*@PLACEHOLDER=Action@*/ /*@END_MENU_TOKEN@*/
+        Button(buttonText) {
+            progress.logToday()
         }
         .bold()
-        .foregroundStyle(Color.white)
+        .foregroundStyle(buttonTextColor)
         .font(.system(size: 36))
         .padding(100)
         .background(
             Circle()
-                .fill(Color.richOrange.opacity(0.95))
+                .fill(buttonBackgroundColor.opacity(0.95))
                 .overlay(
                     Circle()
                         .strokeBorder(
@@ -33,16 +78,16 @@ struct LogActionButton: View {
                                 ]),
                                 center: .center
                             ),  lineWidth: 1
-                            
                         )
                 )
                 .glassEffect(.clear.interactive())
             
         )
         .preferredColorScheme(.dark)
+        .disabled(progress.isTodayLogged() || progress.isTodayFreezed())
     }
 }
 
 #Preview {
-    LogActionButton()
+    LogActionButton(progress: LearningProgress())
 }
