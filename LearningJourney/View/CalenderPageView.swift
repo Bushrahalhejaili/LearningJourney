@@ -141,15 +141,15 @@ private struct MonthSectionView: View {
                             if let color = progress.colorForDate(date) {
                                 Circle()
                                     .fill(color)
-                                    .frame(width: 44, height: 44)
+                                    .frame(width: 38, height: 38)
                                 
                                 Text("\(day)")
-                                    .font(.system(size: 18, weight: .semibold))
-                                    .foregroundStyle(.white)
+                                    .font(.system(size: 20, weight: .semibold))
+                                    .foregroundStyle(progress.textColorForDate(date))
                             } else {
                                 // No progress on this date
                                 Text("\(day)")
-                                    .font(.system(size: 18, weight: .semibold))
+                                    .font(.system(size: 20, weight: .semibold))
                                     .foregroundStyle(.white)
                                     .frame(maxWidth: .infinity, minHeight: 32)
                             }

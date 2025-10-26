@@ -131,21 +131,51 @@ class LearningProgress {
         return nil  // Not logged or frozen
     }
     
+    // Get the text color for a specific date (for the day number)
+    func textColorForDate(_ date: Date) -> Color {
+        let normalized = calendar.startOfDay(for: date)
+        let today = calendar.startOfDay(for: getCurrentDate())
+        
+        // Current day (today) always white text
+        if normalized == today {
+            return .white
+        }
+        
+        // Past frozen dates - light blue text
+        if isDateFreezed(normalized) {
+            return .lightBlue
+        }
+        
+        // Past logged dates - light orange text
+        if isDateLogged(normalized) {
+            return .lightOrange
+        }
+        
+        // Default - white text
+        return .white
+    }
+    
     // Update streak count based on logged dates (only from current goal start)
     private func updateStreakCount() {
         var streak = 0
         var currentDate = calendar.startOfDay(for: getCurrentDate())
         let goalStart = calendar.startOfDay(for: goalStartDate)
         
-        // Count backwards from today, including both logged and frozen days
-        // But stop at goal start date
-        while (isDateLogged(currentDate) || isDateFreezed(currentDate)) && currentDate >= goalStart {
-            // Only count logged days in the streak (not frozen days)
-            if isDateLogged(currentDate) {
-                streak += 1
+        // Count backwards from today, but ONLY dates on or after goal start
+        while currentDate >= goalStart {
+            // Check if this date is logged or frozen
+            if isDateLogged(currentDate) || isDateFreezed(currentDate) {
+                // Only count logged days in the streak (not frozen days)
+                if isDateLogged(currentDate) {
+                    streak += 1
+                }
+                // Continue to previous day
+                guard let previousDay = calendar.date(byAdding: .day, value: -1, to: currentDate) else { break }
+                currentDate = previousDay
+            } else {
+                // Hit a gap - streak is broken, stop counting
+                break
             }
-            guard let previousDay = calendar.date(byAdding: .day, value: -1, to: currentDate) else { break }
-            currentDate = previousDay
         }
         
         currentStreakCount = streak
@@ -162,15 +192,40 @@ class LearningProgress {
         }.count
     }
     
-    // Check if streak should be reset (more than 32 hours since last log)
-    func checkAndResetStreak() {
-        guard let lastLoggedDate = loggedDates.max() else { return }
+    // Check if streak should be reset (missed yesterday without log or freeze)
+    func checkAndResetStreak() -> Bool {
+        let today = calendar.startOfDay(for: getCurrentDate())
+        let goalStart = calendar.startOfDay(for: goalStartDate)
         
-        let hoursSinceLastLog = calendar.dateComponents([.hour], from: lastLoggedDate, to: getCurrentDate()).hour ?? 0
-        
-        if hoursSinceLastLog > 32 {
-            resetStreak()
+        // Grace period: Don't check if today is within 2 days of goal start
+        let daysSinceGoalStart = calendar.dateComponents([.day], from: goalStart, to: today).day ?? 0
+        if daysSinceGoalStart <= 1 {
+            return false  // Grace period - don't check streak
         }
+        
+        // If today is already logged or frozen, streak is safe
+        if isDateLogged(today) || isDateFreezed(today) {
+            return false
+        }
+        
+        // Get yesterday
+        guard let yesterday = calendar.date(byAdding: .day, value: -1, to: today) else {
+            return false
+        }
+        
+        // Only check if yesterday is AFTER goal start
+        // If yesterday is before or on goal start day, don't break streak
+        if yesterday <= goalStart {
+            return false
+        }
+        
+        // If yesterday wasn't logged or frozen, streak is broken
+        // (This represents more than 32 hours without activity)
+        if !isDateLogged(yesterday) && !isDateFreezed(yesterday) {
+            return true  // Streak broken - needs reset
+        }
+        
+        return false  // Streak is safe
     }
     
     // Reset the streak (used for repeating same goal - keeps calendar history)
@@ -183,10 +238,18 @@ class LearningProgress {
     
     // Reset for completely new goal midway - KEEPS calendar history, resets counters
     func resetForNewGoal() {
-        // Don't clear loggedDates and freezedDates - preserve ALL history for calendar
-        // Only reset the counters so streak starts fresh
+        let today = calendar.startOfDay(for: getCurrentDate())
+        
+        // Remove today from logged/frozen dates so buttons become active again
+        loggedDates.remove(today)
+        freezedDates.remove(today)
+        
+        // Force counters to 0 immediately
         currentStreakCount = 0
         frozenDaysCount = 0
+        
+        // Note: goalStartDate should already be set by caller (ProgressManager)
+        // The counters are now 0 and will stay 0 until user logs again
     }
     
     // Complete reset - clears everything including calendar (only if user wants to delete all data)

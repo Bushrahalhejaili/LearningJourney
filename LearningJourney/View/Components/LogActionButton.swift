@@ -60,7 +60,7 @@ struct LogActionButton: View {
         .bold()
         .foregroundStyle(buttonTextColor)
         .font(.system(size: 36))
-        .padding(100)
+        .frame(width: 300, height: 300)  // Fixed size for all states
         .background(
             Circle()
                 .fill(buttonBackgroundColor.opacity(0.95))
