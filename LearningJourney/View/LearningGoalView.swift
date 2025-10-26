@@ -102,10 +102,10 @@ struct LearningGoalView: View {
                         }
                     } label: {
                         Image(systemName: "checkmark")
-                            .foregroundColor(.white)
-                        
-                            .glassEffect(.regular.tint(.lightOrange.opacity(0.4)))
-                    }
+                        .foregroundColor(.white)
+                                          }
+                        .buttonStyle(.borderedProminent)
+                        .tint(Color(.richOrange).opacity(0.65))
                 }
             }
         }

@@ -13,7 +13,7 @@ struct LogActionButton: View {
     // Customizable colors
     var defaultBackgroundColor: Color = .richOrange
     var learnedBackgroundColor: Color = .darkishBrown
-    var freezedBackgroundColor: Color = .darkishBlue
+    var freezedBackgroundColor: Color = .blackishBlue
     var defaultTextColor: Color = .white
     var learnedTextColor: Color = .lightOrange
     var freezedTextColor: Color = .lightBlue

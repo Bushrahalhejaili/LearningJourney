@@ -162,8 +162,9 @@ struct OnboardingView: View {
                            
                     }
                     .disabled(!isStartEnabled)
+                    Spacer().frame(width:100, height:23)
                 }
-                .padding()
+                
             }
             .preferredColorScheme(.dark)
             .navigationBarBackButtonHidden(true)

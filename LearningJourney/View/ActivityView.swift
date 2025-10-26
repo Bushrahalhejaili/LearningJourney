@@ -21,8 +21,8 @@ struct ActivityView: View {
     var body: some View {
         VStack {
             // TESTING CONTROLS - Remove this section when done testing
-            DateSimulatorView(progress: progress)
-                .padding(.top, 20)
+//            DateSimulatorView(progress: progress)
+//                .padding(.top, 20)
             // END TESTING CONTROLS
             
             Spacer()
@@ -35,7 +35,7 @@ struct ActivityView: View {
 
             Spacer()
 
-            VStack(spacing: 44) {
+            VStack(spacing: 36) {
                 CalenderProgressView(learningTopic: progress.learningTopic, progress: progress)
                 
                 // Show goal completed view or log buttons
