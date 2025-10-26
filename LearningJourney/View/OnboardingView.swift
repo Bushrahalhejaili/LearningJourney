@@ -4,7 +4,6 @@
 //
 //  Created by Bushra Hatim Alhejaili on 16/10/2025.
 //
-
 import SwiftUI
 
 struct OnboardingView: View {
@@ -22,6 +21,9 @@ struct OnboardingView: View {
     var buttonWidth: CGFloat = 182
     var buttonHeight: CGFloat = 48
 
+    // ✅ Manage focus so we can dismiss the keyboard cleanly
+    @FocusState private var isTopicFocused: Bool
+
     private var isStartEnabled: Bool {
         !learningTopic.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && goal != nil
     }
@@ -37,6 +39,7 @@ struct OnboardingView: View {
 
     var body: some View {
         NavigationStack {
+            // ✅ Keep the layout fixed when the keyboard appears
             VStack {
                 VStack {
                     ZStack {
@@ -83,6 +86,7 @@ struct OnboardingView: View {
                                 .foregroundColor(textFieldTextColor)
                                 .textInputAutocapitalization(.words)
                                 .disableAutocorrection(true)
+                                .focused($isTopicFocused) // ✅ bind focus
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -159,15 +163,18 @@ struct OnboardingView: View {
                                 RoundedRectangle(cornerRadius: 1000, style: .continuous)
                                     .fill(isStartEnabled ? Color.lightOrange : Color.darkishGray)
                             )
-                           
                     }
                     .disabled(!isStartEnabled)
-                    Spacer().frame(width:100, height:23)
+
+                    Spacer().frame(width: 100, height: 23)
                 }
-                
             }
             .preferredColorScheme(.dark)
             .navigationBarBackButtonHidden(true)
+
+            // ✅ These two lines keep the view from shifting and let you dismiss the keyboard easily
+            .ignoresSafeArea(.keyboard) // <-- prevents auto "push up" when keyboard shows
+            .onTapGesture { isTopicFocused = false } // tap anywhere to dismiss
         }
     }
 }
