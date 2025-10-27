@@ -9,9 +9,9 @@ A tiny iOS app that helps you learn **a little every day**.
 Set a topic (e.g. “Swift”), choose a duration (Week / Month / Year), and track your streak.  
 
 <p align="center">
-  <img src="Screenshots/01-onboarding.png" width="260">
-  <img src="Screenshots/02-activity.png" width="260">
-  <img src="Screenshots/03-calendar.png" width="260">
+  <img src="Screenshots/onboarding.PNG" width="260">
+  <img src="Screenshots/activity.PNG" width="260">
+  <img src="Screenshots/calendar.PNG" width="260">
 </p>
 
 ---
