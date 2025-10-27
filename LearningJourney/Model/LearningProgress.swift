@@ -4,255 +4,323 @@
 //
 //  Created by Bushra Hatim Alhejaili on 03/05/1447 AH.
 //
-import SwiftUI
 
+// We import SwiftUI because we use Color in this file (for calendar colors).
+import SwiftUI 
+
+// @Observable is a Swift macro that makes this class automatically notify SwiftUI
+// when its properties change. That means views can react to changes without extra work.
 @Observable
 class LearningProgress {
+    // A Set of Date values to remember which days were "learned".
+    // Set means each date is unique (no duplicates).
     var loggedDates: Set<Date> = []
+    
+    // A Set of Date values to remember which days were "frozen" (used a freeze).
     var freezedDates: Set<Date> = []  // Track frozen dates
+    
+    // How many days in a row the user has learned (only counting learned days, not frozen).
     var currentStreakCount: Int = 0
+    
+    // How many frozen days the user has used in the current goal period.
     var frozenDaysCount: Int = 0
     
-    // Goal information
+    // MARK: - Goal information
+    
+    // The topic the user wants to learn (e.g., "Swift").
     var learningTopic: String = ""
+    
+    // The length of the goal: "Week", "Month", or "Year".
     var goalDuration: String = "Week"  // Week, Month, or Year
+    
+    // The date when the current goal started. Used to decide which days count for this goal.
     var goalStartDate: Date = Date()  // Track when goal started
     
+    // The maximum number of freezes allowed, depending on the goalDuration.
+    // This is a computed property: it calculates a value every time you read it.
     var maxFreezes: Int {
         switch goalDuration {
-        case "Week": return 2
-        case "Month": return 8
-        case "Year": return 96
-        default: return 2
+        case "Week": return 2   // If goal is a week, allow 2 freezes.
+        case "Month": return 8  // For a month, allow 8 freezes.
+        case "Year": return 96  // For a year, allow 96 freezes.
+        default: return 2       // Default fallback.
         }
     }
     
-    // Check if goal is completed
+    // MARK: - Derived state (computed from other data)
+    
+    // This computed property checks whether the goal period is over.
+    // It compares today's date with the goal start date and sees how many days passed.
     var isGoalCompleted: Bool {
         let calendar = Calendar.current
+        
+        // We only care about the "day" part (remove time like 10:34 AM).
         let today = calendar.startOfDay(for: getCurrentDate())
         let startOfGoal = calendar.startOfDay(for: goalStartDate)
-        let daysSinceStart = calendar.dateComponents([.day], from: startOfGoal, to: today).day ?? 0
         
+        // How many whole days from the start to today?
+        let daysSinceStart = calendar
+            .dateComponents([.day], from: startOfGoal, to: today)
+            .day ?? 0
+        
+        // If enough days passed, the goal is considered completed.
         switch goalDuration {
-        case "Week": return daysSinceStart >= 7
+        case "Week":  return daysSinceStart >= 7
         case "Month": return daysSinceStart >= 30
-        case "Year": return daysSinceStart >= 365
-        default: return false
+        case "Year":  return daysSinceStart >= 365
+        default:      return false
         }
     }
     
-    // Check if user has freezes remaining
+    // True if the user still has freezes left to use.
     var hasFreezesRemaining: Bool {
         return frozenDaysCount < maxFreezes
     }
     
+    // How many freezes are left (never go below 0).
     var freezesRemaining: Int {
         return max(0, maxFreezes - frozenDaysCount)
     }
     
-    // Testing feature - simulate different days
+    // MARK: - Testing helper
+    
+    // This is optional. If set, we pretend "today" is this date (handy for testing).
+    // If nil, we use the real device date.
     var simulatedDate: Date? = nil  // Set this to test different dates
     
+    // We keep a reference to the user's current calendar (for date math).
     private let calendar = Calendar.current
     
-    // Get the current date (real or simulated)
+    // Returns "now", but if simulatedDate is set (for testing), it returns that instead.
     private func getCurrentDate() -> Date {
         return simulatedDate ?? Date()
     }
     
-    // Log today as learned
+    // MARK: - User actions that change data
+    
+    // Mark "today" as learned.
     func logToday() {
+        // Normalize to the start of day so time doesn’t matter (only the date).
         let today = calendar.startOfDay(for: getCurrentDate())
         
-        // Only log if not already logged or freezed today
+        // Only log if today isn’t already logged or frozen (avoid duplicates).
         guard !isDateLogged(today) && !isDateFreezed(today) else { return }
         
+        // Add today to the set of learned dates.
         loggedDates.insert(today)
+        
+        // Recalculate the streak (because it might increase).
         updateStreakCount()
     }
     
-    // Log today as freezed
+    // Mark "today" as frozen (uses up one freeze, preserves streak boundaries).
     func freezeToday() {
         let today = calendar.startOfDay(for: getCurrentDate())
         
-        // Check if user has freezes remaining
+        // Don't allow freeze if there are none left.
         guard hasFreezesRemaining else { return }
         
-        // Only freeze if not already logged or freezed today
+        // Only freeze if today isn’t already learned or frozen.
         guard !isDateLogged(today) && !isDateFreezed(today) else { return }
         
+        // Add today to the set of frozen dates.
         freezedDates.insert(today)
+        
+        // Update how many frozen days are used within this goal.
         updateFreezeCount()
+        
+        // Recalculate the streak so that logic stays consistent (frozen days aren't counted but may keep continuity).
         updateStreakCount()  // Recalculate streak to maintain it
     }
     
-    // Check if a specific date is logged
+    // MARK: - Query helpers (ask questions about dates)
+    
+    // Returns true if a specific date is logged as learned.
     func isDateLogged(_ date: Date) -> Bool {
+        // Normalize the date to remove time; we only compare by day.
         let normalized = calendar.startOfDay(for: date)
         return loggedDates.contains(normalized)
     }
     
-    // Check if a specific date is freezed
+    // Returns true if a specific date is frozen.
     func isDateFreezed(_ date: Date) -> Bool {
         let normalized = calendar.startOfDay(for: date)
         return freezedDates.contains(normalized)
     }
     
-    // Check if today is logged
+    // Convenience: is "today" logged?
     func isTodayLogged() -> Bool {
         return isDateLogged(getCurrentDate())
     }
     
-    // Check if today is freezed
+    // Convenience: is "today" frozen?
     func isTodayFreezed() -> Bool {
         return isDateFreezed(getCurrentDate())
     }
     
-    // Get the color for a specific date in the calendar
+    // MARK: - Calendar coloring (for the UI)
+    
+    // Decide what background color a calendar day should be, based on its state.
     func colorForDate(_ date: Date) -> Color? {
         let normalized = calendar.startOfDay(for: date)
         let today = calendar.startOfDay(for: getCurrentDate())
         
-        // Check freeze first
+        // First: check freezes (frozen days use blue shades).
         if normalized == today && isDateFreezed(today) {
-            return .lightBlue  // Today's date when frozen stays light blue
+            return .lightBlue  // Today and frozen → light blue
         } else if isDateFreezed(normalized) {
-            return .darkishBlue  // Past frozen dates are dark blue
+            return .darkishBlue  // Past frozen days → darker blue
         }
         
-        // Then check logged
+        // Next: check learned (learned days use orange/brown shades).
         if normalized == today && isDateLogged(today) {
-            return .lightOrange  // Today's date when logged stays light orange
+            return .lightOrange  // Today and learned → light orange
         } else if isDateLogged(normalized) {
-            return .brownie  // Past logged dates are brownie
+            return .brownie  // Past learned days → brownie color
         }
         
-        return nil  // Not logged or frozen
+        // If neither frozen nor learned, return nil (no colored circle).
+        return nil
     }
     
-    // Get the text color for a specific date (for the day number)
+    // Decide what text color (numbers inside the calendar circles) to use.
     func textColorForDate(_ date: Date) -> Color {
         let normalized = calendar.startOfDay(for: date)
         let today = calendar.startOfDay(for: getCurrentDate())
         
-        // Current day (today) always white text
+        // Today’s day number should always be visible → white.
         if normalized == today {
             return .white
         }
         
-        // Past frozen dates - light blue text
+        // Past frozen days → light blue text.
         if isDateFreezed(normalized) {
             return .lightBlue
         }
         
-        // Past logged dates - light orange text
+        // Past learned days → light orange text.
         if isDateLogged(normalized) {
             return .lightOrange
         }
         
-        // Default - white text
+        // Default for other days.
         return .white
     }
     
-    // Update streak count based on logged dates (only from current goal start)
+    // MARK: - Internal counters (streaks and freezes)
+    
+    // Recalculate how many days in a row the user has learned.
+    // We count backwards from today until we find a gap (a day that is neither learned nor frozen).
+    // Only LEARNED days increment the streak number, but frozen days let the “chain” continue.
     private func updateStreakCount() {
         var streak = 0
+        
+        // Start from today (normalized).
         var currentDate = calendar.startOfDay(for: getCurrentDate())
+        
+        // Only count dates from the goal start date forward.
         let goalStart = calendar.startOfDay(for: goalStartDate)
         
-        // Count backwards from today, but ONLY dates on or after goal start
+        // Walk backwards day by day until we go past the goal start.
         while currentDate >= goalStart {
-            // Check if this date is logged or frozen
+            // If this day is either learned or frozen, the chain is intact.
             if isDateLogged(currentDate) || isDateFreezed(currentDate) {
-                // Only count logged days in the streak (not frozen days)
+                // Only learned days increase the numeric streak count.
                 if isDateLogged(currentDate) {
                     streak += 1
                 }
-                // Continue to previous day
+                // Move to the previous day.
                 guard let previousDay = calendar.date(byAdding: .day, value: -1, to: currentDate) else { break }
                 currentDate = previousDay
             } else {
-                // Hit a gap - streak is broken, stop counting
+                // We found a gap → stop counting.
                 break
             }
         }
         
+        // Store the result so the UI can show it.
         currentStreakCount = streak
     }
     
-    // Update freeze count based on frozen dates (only from current goal start)
+    // Recalculate how many frozen days were used in THIS goal period.
     private func updateFreezeCount() {
+        // Only count frozen dates on or after the goalStartDate.
         let goalStart = calendar.startOfDay(for: goalStartDate)
         
-        // Only count freezes that occurred after goal start date
+        // Filter the set to only include relevant days, then count them.
         frozenDaysCount = freezedDates.filter { date in
             let normalized = calendar.startOfDay(for: date)
             return normalized >= goalStart
         }.count
     }
     
-    // Check if streak should be reset (missed yesterday without log or freeze)
+    // MARK: - Streak safety check
+    
+    // This checks if the streak should be considered "broken" (missed yesterday without a log or freeze).
+    // It returns true if streak is broken and should reset (your ViewModel decides what to do with that info).
     func checkAndResetStreak() -> Bool {
         let today = calendar.startOfDay(for: getCurrentDate())
         let goalStart = calendar.startOfDay(for: goalStartDate)
         
-        // Grace period: Don't check if today is within 2 days of goal start
-        let daysSinceGoalStart = calendar.dateComponents([.day], from: goalStart, to: today).day ?? 0
+        // Grace period: the first 2 days after starting a goal, do not break the streak automatically.
+        let daysSinceGoalStart = calendar
+            .dateComponents([.day], from: goalStart, to: today)
+            .day ?? 0
         if daysSinceGoalStart <= 1 {
-            return false  // Grace period - don't check streak
+            return false  // Too early to break the streak.
         }
         
-        // If today is already logged or frozen, streak is safe
+        // If today is already learned or frozen, then the streak is safe.
         if isDateLogged(today) || isDateFreezed(today) {
             return false
         }
         
-        // Get yesterday
+        // Look at "yesterday".
         guard let yesterday = calendar.date(byAdding: .day, value: -1, to: today) else {
             return false
         }
         
-        // Only check if yesterday is AFTER goal start
-        // If yesterday is before or on goal start day, don't break streak
+        // If yesterday is before or equal to the start date, don't break the streak.
         if yesterday <= goalStart {
             return false
         }
         
-        // If yesterday wasn't logged or frozen, streak is broken
-        // (This represents more than 32 hours without activity)
+        // If yesterday was neither learned nor frozen, then the chain is broken.
+        // (Dev note: Your comment mentions “32 hours,” but here we use calendar days.)
         if !isDateLogged(yesterday) && !isDateFreezed(yesterday) {
-            return true  // Streak broken - needs reset
+            return true  // Streak broken
         }
         
-        return false  // Streak is safe
+        // Otherwise, streak is okay.
+        return false
     }
     
-    // Reset the streak (used for repeating same goal - keeps calendar history)
+    // MARK: - Reset helpers (different levels)
+    
+    // Reset only the counters (streak & freezes), keep the calendar history (dates) intact.
     func resetStreak() {
-        // Don't clear loggedDates and freezedDates - keep them for calendar history
-        // Only reset the counters
+        // Keep loggedDates and freezedDates for the history display.
         currentStreakCount = 0
         frozenDaysCount = 0
     }
     
-    // Reset for completely new goal midway - KEEPS calendar history, resets counters
+    // Reset for a totally new goal mid-way.
+    // We remove today from logs/freezes so the user can choose again, and reset counters.
     func resetForNewGoal() {
         let today = calendar.startOfDay(for: getCurrentDate())
         
-        // Remove today from logged/frozen dates so buttons become active again
+        // Remove today's status so buttons become active again for the new goal.
         loggedDates.remove(today)
         freezedDates.remove(today)
         
-        // Force counters to 0 immediately
+        // Reset counters immediately.
         currentStreakCount = 0
         frozenDaysCount = 0
         
-        // Note: goalStartDate should already be set by caller (ProgressManager)
-        // The counters are now 0 and will stay 0 until user logs again
+        // Note: goalStartDate should be set by the caller (ViewModel) for the new goal.
     }
     
-    // Complete reset - clears everything including calendar (only if user wants to delete all data)
+    // Full reset: clear all history and counters (use with caution).
     func resetStreakAndHistory() {
         loggedDates.removeAll()
         freezedDates.removeAll()
@@ -260,36 +328,34 @@ class LearningProgress {
         frozenDaysCount = 0
     }
     
-    // Reset goal while keeping calendar history
+    // Start a fresh goal cycle BUT keep all calendar history visible.
+    // Only reset the counters and set a new start date to "today".
     func resetGoalKeepHistory() {
-        // Start a new goal cycle - reset counters and start date
-        // but keep ALL historical data visible in calendar
-        goalStartDate = calendar.startOfDay(for: getCurrentDate())
+        goalStartDate = calendar.startOfDay(for: getCurrentDate()) // new cycle starts now
         currentStreakCount = 0
         frozenDaysCount = 0
-        
-        // Don't touch loggedDates or freezedDates - they stay for calendar history
-        // This allows starting fresh while preserving the visual history
+        // Do not touch loggedDates/freezedDates → history remains.
     }
     
-    // Reset when learning goal is updated
+    // When a learning goal is updated (but not scrapped), just reset counters.
     func resetForGoalUpdate() {
-        // Keep calendar history, just reset counters
         resetStreak()
     }
     
-    // MARK: - Testing Helpers
+    // MARK: - Testing helpers (simulate time travel)
     
-    // Move to next day (for testing)
+    // Pretend we moved one day into the future.
     func advanceToNextDay() {
         if let simulated = simulatedDate {
+            // If already simulating, add 1 day to the simulated date.
             simulatedDate = calendar.date(byAdding: .day, value: 1, to: simulated)
         } else {
+            // If not simulating, start from real today + 1.
             simulatedDate = calendar.date(byAdding: .day, value: 1, to: Date())
         }
     }
     
-    // Move to previous day (for testing)
+    // Pretend we moved one day into the past.
     func goToPreviousDay() {
         if let simulated = simulatedDate {
             simulatedDate = calendar.date(byAdding: .day, value: -1, to: simulated)
@@ -298,7 +364,7 @@ class LearningProgress {
         }
     }
     
-    // Reset to real current date
+    // Stop simulating and return to the real current date.
     func resetToRealDate() {
         simulatedDate = nil
     }
