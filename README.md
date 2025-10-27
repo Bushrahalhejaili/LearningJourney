@@ -10,7 +10,7 @@ Set a topic (e.g. “Swift”), choose a duration (Week / Month / Year), and tra
 
 <p align="center">
   <img src="Screenshots/onboarding.PNG" width="260">
-  <img src="Screenshots/activity.PNG" width="260">
+  <img src="Screenshots/activity..PNG" width="260">
   <img src="Screenshots/calendar.PNG" width="260">
 </p>
 
