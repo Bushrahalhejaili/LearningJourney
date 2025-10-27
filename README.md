@@ -1,4 +1,4 @@
-# Learnin gJourney 📚�
+# Learning Journey 
 
 ## App Statement
 > **Learning Journey** empowers learners to build daily habits around a topic they care about and track their progress in a clear, rewarding way.  
