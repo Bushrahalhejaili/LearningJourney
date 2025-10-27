@@ -44,33 +44,7 @@ Set a topic (e.g. “Swift”), choose a duration (Week / Month / Year), and tra
 
 ---
 
-## Project Structure
-
-LearningJourney/
-├─ LearningJourneyApp.swift          # App entry; boots from saved progress or onboarding
-├─ Model/
-│  └─ LearningProgress.swift         # Observable model + business logic
-├─ ViewModel/
-│  └─ LearningProgressViewModel.swift# State + actions + auto-saving logic
-├─ View/
-│  ├─ OnboardingView.swift
-│  ├─ ActivityView.swift
-│  ├─ CalendarPageView.swift
-│  └─ Components/
-│     ├─ ToolbarView.swift
-│     ├─ CalendarProgressView.swift
-│     ├─ LogActionButton.swift
-│     ├─ FreezeButton.swift
-│     ├─ NewGoalButton.swift
-│     └─ GoalCompletedView.swift
-├─ Persistence/
-│  └─ Persistence.swift              # Save/load logic
-
----
-
 ## Requirements
 
 - iOS **26+**
 - Xcode **26+**
-
-
